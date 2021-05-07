@@ -19,20 +19,13 @@ namespace TamagotchiAPI
                 var canContinue = await Utilities.WaitForMigrations(host, context);
 
                 if (!canContinue)
-                {
                     return;
-                }
             }
 
             var task = host.RunAsync();
 
             Utilities.Notify("TamagotchiAPI Running!");
-            var consoleRunning = true;
-            while (consoleRunning)
-            {
-                // Set up the rest of the console app
-                consoleRunning = false;
-            }
+
             WebHostExtensions.WaitForShutdown(host);
         }
     }

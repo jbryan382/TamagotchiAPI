@@ -12,10 +12,5 @@ namespace TamagotchiAPI.Models
         public int HappinessLevel { get; set; } = 0;
         public DateTime LastInteractedWithDate { get; set; }
         public bool IsDead { get; set; } = false;
-
-        public bool IsItDead()
-        {
-            return (DateTime.Now - LastInteractedWithDate).TotalSeconds > 30 ? true : false;
-        }
     }
 }

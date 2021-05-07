@@ -57,7 +57,7 @@ namespace TamagotchiAPI.Controllers
                 return NotFound();
             }
 
-            if (pet.IsItDead())
+            if (IsItDead(pet))
             {
                 pet.IsDead = true;
                 await _context.SaveChangesAsync();
@@ -86,7 +86,7 @@ namespace TamagotchiAPI.Controllers
             if (id != pet.Id)
                 return BadRequest();
 
-            if (pet.IsItDead())
+            if (IsItDead(pet))
             {
                 pet.IsDead = true;
                 await _context.SaveChangesAsync();
@@ -177,7 +177,7 @@ namespace TamagotchiAPI.Controllers
         public async Task<ActionResult<Playtime>> PostPlaytime(int id)
         {
             var playingPet = await _context.Pets.FindAsync(id);
-            if (playingPet.IsItDead())
+            if (IsItDead(playingPet))
             {
                 playingPet.IsDead = true;
                 await _context.SaveChangesAsync();
@@ -221,7 +221,7 @@ namespace TamagotchiAPI.Controllers
         public async Task<ActionResult<Playtime>> PostFeeding(int id)
         {
             var feedingPet = await _context.Pets.FindAsync(id);
-            if (feedingPet.IsItDead())
+            if (IsItDead(feedingPet))
             {
                 feedingPet.IsDead = true;
                 await _context.SaveChangesAsync();
@@ -269,7 +269,7 @@ namespace TamagotchiAPI.Controllers
         public async Task<ActionResult<Playtime>> PostScolding(int id)
         {
             var scoldingPet = await _context.Pets.FindAsync(id);
-            if (scoldingPet.IsItDead())
+            if (IsItDead(scoldingPet))
             {
                 scoldingPet.IsDead = true;
                 await _context.SaveChangesAsync();
@@ -316,6 +316,11 @@ namespace TamagotchiAPI.Controllers
         private bool PetExists(int id)
         {
             return _context.Pets.Any(pet => pet.Id == id);
+        }
+
+        private bool IsItDead(Pet pet)
+        {
+            return (DateTime.Now - pet.LastInteractedWithDate).TotalSeconds > 30 ? true : false; ;
         }
     }
 }
