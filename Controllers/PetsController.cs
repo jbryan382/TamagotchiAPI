@@ -160,6 +160,44 @@ namespace TamagotchiAPI.Controllers
             return Ok(pet);
         }
 
+        [HttpPost("{id}/playtime")]
+        public async Task<ActionResult<Playtime>> PostPlaytime(int id)
+        {
+            var playingPet = await _context.Pets.FindAsync(id);
+            Playtime playtime = new Playtime();
+            playtime.PetId = id;
+            playingPet.HungerLevel += 3;
+            playingPet.HappinessLevel += 5;
+
+            await _context.Playtimes.AddAsync(playtime);
+
+            try
+            {
+                // Try to save these changes.
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Ooops, looks like there was an error, so check to see if the record we were
+                // updating no longer exists.
+                if (!PetExists(id))
+                {
+                    // If the record we tried to update was already deleted by someone else,
+                    // return a `404` not found
+                    return NotFound();
+                }
+                else
+                {
+                    // Otherwise throw the error back, which will cause the request to fail
+                    // and generate an error to the client.
+                    throw;
+                }
+            }
+
+            // Return a copy of the updated data
+            return Ok(playtime);
+        }
+
         // Private helper method that looks up an existing pet by the supplied id
         private bool PetExists(int id)
         {
