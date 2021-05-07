@@ -35,16 +35,10 @@ namespace TamagotchiAPI.Controllers
         {
             // Uses the database context in `_context` to request all of the Pets, sort
             // them by row id and return them as a JSON array.
-            if (input.ToLower() == "alive")
-            {
-                foreach (var pet in _context.Pets)
-                {
-                    pet.IsDead = IsItDead(pet);
-                }
-                await _context.SaveChangesAsync();
-                return await _context.Pets.Where(row => !row.IsDead).OrderBy(row => row.Id).ToListAsync();
-            }
-            return await _context.Pets.OrderBy(row => row.Id).ToListAsync();
+            return input.ToLower() == "alive" ? _context.Pets.AsEnumerable()
+                .Where(row => !row.IsDead)
+                .OrderBy(row => row.Id)
+                .ToList() : await _context.Pets.OrderBy(row => row.Id).ToListAsync();
         }
 
         // GET: api/Pets/5
@@ -61,17 +55,11 @@ namespace TamagotchiAPI.Controllers
 
             // If we didn't find anything, we receive a `null` in return
             if (pet == null)
-            {
                 // Return a `404` response to the client indicating we could not find a pet with this id
                 return NotFound();
-            }
 
-            if (IsItDead(pet))
-            {
-                pet.IsDead = true;
-                await _context.SaveChangesAsync();
+            if (pet.IsDead)
                 return Ok("Your Tamagotchi has perished...");
-            }
 
             // Return the pet as a JSON object.
             return pet;
@@ -95,12 +83,8 @@ namespace TamagotchiAPI.Controllers
             if (id != pet.Id)
                 return BadRequest();
 
-            if (IsItDead(pet))
-            {
-                pet.IsDead = true;
-                await _context.SaveChangesAsync();
+            if (pet.IsDead)
                 return Ok("Your Tamagotchi has perished...");
-            }
 
             // Tell the database to consider everything in pet to be _updated_ values. When
             // the save happens the database will _replace_ the values in the database with the ones from pet
@@ -166,6 +150,7 @@ namespace TamagotchiAPI.Controllers
         {
             // Find this pet by looking for the specific id
             var pet = await _context.Pets.FindAsync(id);
+
             if (pet == null)
             {
                 // There wasn't a pet with that id so return a `404` not found
@@ -186,12 +171,10 @@ namespace TamagotchiAPI.Controllers
         public async Task<ActionResult<Playtime>> PostPlaytime(int id)
         {
             var playingPet = await _context.Pets.FindAsync(id);
-            if (IsItDead(playingPet))
-            {
-                playingPet.IsDead = true;
-                await _context.SaveChangesAsync();
+
+            if (playingPet.IsDead)
                 return Ok("Your Tamagotchi has perished...");
-            }
+
             Playtime playtime = new Playtime();
             playtime.PetId = id;
             playingPet.HungerLevel += 3;
@@ -230,17 +213,15 @@ namespace TamagotchiAPI.Controllers
         public async Task<ActionResult<Playtime>> PostFeeding(int id)
         {
             var feedingPet = await _context.Pets.FindAsync(id);
-            if (IsItDead(feedingPet))
-            {
-                feedingPet.IsDead = true;
-                await _context.SaveChangesAsync();
+
+            if (feedingPet.IsDead)
                 return Ok("Your Tamagotchi has perished...");
-            }
+
+            if (feedingPet.HungerLevel - 5 < 0)
+                return Ok("Not Hungry Enough");
 
             Feeding feeding = new Feeding();
             feeding.PetId = id;
-            if (feedingPet.HungerLevel - 5 < 0)
-                return Ok("Not Hungry Enough");
 
             feedingPet.HungerLevel -= 5;
             feedingPet.HappinessLevel += 3;
@@ -278,17 +259,14 @@ namespace TamagotchiAPI.Controllers
         public async Task<ActionResult<Playtime>> PostScolding(int id)
         {
             var scoldingPet = await _context.Pets.FindAsync(id);
-            if (IsItDead(scoldingPet))
-            {
-                scoldingPet.IsDead = true;
-                await _context.SaveChangesAsync();
+            if (scoldingPet.IsDead)
                 return Ok("Your Tamagotchi has perished...");
-            }
+
+            if (scoldingPet.HappinessLevel - 5 < 0)
+                return Ok("Why? The Tamagotchi can't take any more scolding...");
 
             Scolding scolding = new Scolding();
             scolding.PetId = id;
-            if (scoldingPet.HappinessLevel - 5 < 0)
-                return Ok("Why? The Tamagotchi can't take any more scolding...");
 
             scoldingPet.HappinessLevel -= 5;
 
@@ -327,9 +305,10 @@ namespace TamagotchiAPI.Controllers
             return _context.Pets.Any(pet => pet.Id == id);
         }
 
-        private bool IsItDead(Pet pet)
-        {
-            return (DateTime.Now - pet.LastInteractedWithDate).TotalDays > 3 ? true : false;
-        }
+        // No longer needed as the IsDead prop now handles this logic.
+        // private bool IsItDead(Pet pet)
+        // {
+        //     return (DateTime.Now - pet.LastInteractedWithDate).TotalDays > 3 ? true : false;
+        // }
     }
 }

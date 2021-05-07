@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace TamagotchiAPI.Migrations
 {
-    public partial class SetUpDB : Migration
+    public partial class ResetTheData : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -17,7 +17,8 @@ namespace TamagotchiAPI.Migrations
                     Name = table.Column<string>(type: "text", nullable: true),
                     Birthday = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     HungerLevel = table.Column<int>(type: "integer", nullable: false),
-                    HappinessLevel = table.Column<int>(type: "integer", nullable: false)
+                    HappinessLevel = table.Column<int>(type: "integer", nullable: false),
+                    LastInteractedWithDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
