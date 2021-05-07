@@ -329,7 +329,7 @@ namespace TamagotchiAPI.Controllers
 
         private bool IsItDead(Pet pet)
         {
-            return (DateTime.Now - pet.LastInteractedWithDate).TotalSeconds > 15 ? true : false;
+            return (DateTime.Now - pet.LastInteractedWithDate).TotalDays > 3 ? true : false;
         }
     }
 }
