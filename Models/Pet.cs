@@ -10,9 +10,12 @@ namespace TamagotchiAPI.Models
         public DateTime Birthday { get; set; } = DateTime.Now;
         public int HungerLevel { get; set; } = 0;
         public int HappinessLevel { get; set; } = 0;
-        public List<Playtime> Playtimes { get; set; }
-        public List<Feeding> Feedings { get; set; }
-        public List<Scolding> Scoldings { get; set; }
+        public DateTime LastInteractedWithDate { get; set; }
+        public bool IsDead { get; set; } = false;
 
+        public bool IsItDead()
+        {
+            return (DateTime.Now - LastInteractedWithDate).TotalSeconds > 30 ? true : false;
+        }
     }
 }

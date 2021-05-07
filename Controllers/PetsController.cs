@@ -35,7 +35,7 @@ namespace TamagotchiAPI.Controllers
         {
             // Uses the database context in `_context` to request all of the Pets, sort
             // them by row id and return them as a JSON array.
-            return await _context.Pets.OrderBy(row => row.Id).ToListAsync();
+            return await _context.Pets.Where(row => !row.IsDead).OrderBy(row => row.Id).ToListAsync();
         }
 
         // GET: api/Pets/5
@@ -55,6 +55,13 @@ namespace TamagotchiAPI.Controllers
             {
                 // Return a `404` response to the client indicating we could not find a pet with this id
                 return NotFound();
+            }
+
+            if (pet.IsItDead())
+            {
+                pet.IsDead = true;
+                await _context.SaveChangesAsync();
+                return Ok("Your Tamagotchi has perished...");
             }
 
             // Return the pet as a JSON object.
@@ -77,8 +84,13 @@ namespace TamagotchiAPI.Controllers
         {
             // If the ID in the URL does not match the ID in the supplied request body, return a bad request
             if (id != pet.Id)
-            {
                 return BadRequest();
+
+            if (pet.IsItDead())
+            {
+                pet.IsDead = true;
+                await _context.SaveChangesAsync();
+                return Ok("Your Tamagotchi has perished...");
             }
 
             // Tell the database to consider everything in pet to be _updated_ values. When
@@ -125,6 +137,7 @@ namespace TamagotchiAPI.Controllers
         public async Task<ActionResult<Pet>> PostPet(Pet pet)
         {
             // Indicate to the database context we want to add this new record
+
             _context.Pets.Add(pet);
             await _context.SaveChangesAsync();
 
@@ -164,6 +177,12 @@ namespace TamagotchiAPI.Controllers
         public async Task<ActionResult<Playtime>> PostPlaytime(int id)
         {
             var playingPet = await _context.Pets.FindAsync(id);
+            if (playingPet.IsItDead())
+            {
+                playingPet.IsDead = true;
+                await _context.SaveChangesAsync();
+                return Ok("Your Tamagotchi has perished...");
+            }
             Playtime playtime = new Playtime();
             playtime.PetId = id;
             playingPet.HungerLevel += 3;
@@ -196,6 +215,101 @@ namespace TamagotchiAPI.Controllers
 
             // Return a copy of the updated data
             return Ok(playtime);
+        }
+
+        [HttpPost("{id}/feeding")]
+        public async Task<ActionResult<Playtime>> PostFeeding(int id)
+        {
+            var feedingPet = await _context.Pets.FindAsync(id);
+            if (feedingPet.IsItDead())
+            {
+                feedingPet.IsDead = true;
+                await _context.SaveChangesAsync();
+                return Ok("Your Tamagotchi has perished...");
+            }
+
+            Feeding feeding = new Feeding();
+            feeding.PetId = id;
+            if (feedingPet.HungerLevel - 5 < 0)
+                return Ok("Not Hungry Enough");
+
+            feedingPet.HungerLevel -= 5;
+            feedingPet.HappinessLevel += 3;
+
+            await _context.Feedings.AddAsync(feeding);
+
+            try
+            {
+                // Try to save these changes.
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Ooops, looks like there was an error, so check to see if the record we were
+                // updating no longer exists.
+                if (!PetExists(id))
+                {
+                    // If the record we tried to update was already deleted by someone else,
+                    // return a `404` not found
+                    return NotFound();
+                }
+                else
+                {
+                    // Otherwise throw the error back, which will cause the request to fail
+                    // and generate an error to the client.
+                    throw;
+                }
+            }
+
+            // Return a copy of the updated data
+            return Ok(feeding);
+        }
+
+        [HttpPost("{id}/scolding")]
+        public async Task<ActionResult<Playtime>> PostScolding(int id)
+        {
+            var scoldingPet = await _context.Pets.FindAsync(id);
+            if (scoldingPet.IsItDead())
+            {
+                scoldingPet.IsDead = true;
+                await _context.SaveChangesAsync();
+                return Ok("Your Tamagotchi has perished...");
+            }
+
+            Scolding scolding = new Scolding();
+            scolding.PetId = id;
+            if (scoldingPet.HappinessLevel - 5 < 0)
+                return Ok("Why? The Tamagotchi can't take any more scolding...");
+
+            scoldingPet.HappinessLevel -= 5;
+
+            await _context.Scoldings.AddAsync(scolding);
+
+            try
+            {
+                // Try to save these changes.
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Ooops, looks like there was an error, so check to see if the record we were
+                // updating no longer exists.
+                if (!PetExists(id))
+                {
+                    // If the record we tried to update was already deleted by someone else,
+                    // return a `404` not found
+                    return NotFound();
+                }
+                else
+                {
+                    // Otherwise throw the error back, which will cause the request to fail
+                    // and generate an error to the client.
+                    throw;
+                }
+            }
+
+            // Return a copy of the updated data
+            return Ok(scolding);
         }
 
         // Private helper method that looks up an existing pet by the supplied id
