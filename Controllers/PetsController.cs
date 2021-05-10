@@ -35,10 +35,10 @@ namespace TamagotchiAPI.Controllers
         {
             // Uses the database context in `_context` to request all of the Pets, sort
             // them by row id and return them as a JSON array.
-            return input.ToLower() == "alive" ? _context.Pets.AsEnumerable()
+            return await (input.ToLower() == "alive" ? Task.Run(() => _context.Pets.AsEnumerable()
                 .Where(row => !row.IsDead)
                 .OrderBy(row => row.Id)
-                .ToList() : await _context.Pets.OrderBy(row => row.Id).ToListAsync();
+                .ToList()) : _context.Pets.OrderBy(row => row.Id).ToListAsync());
         }
 
         // GET: api/Pets/5
