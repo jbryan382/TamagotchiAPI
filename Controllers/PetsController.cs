@@ -53,6 +53,9 @@ namespace TamagotchiAPI.Controllers
             // Find the pet in the database using `FindAsync` to look it up by id
             var pet = await _context.Pets.FindAsync(id);
 
+            pet.UpdateHungerAndHappiness();
+            Console.WriteLine(pet.HungerLevel);
+
             // If we didn't find anything, we receive a `null` in return
             if (pet == null)
                 // Return a `404` response to the client indicating we could not find a pet with this id
